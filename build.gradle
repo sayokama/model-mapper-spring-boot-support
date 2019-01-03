@@ -1,31 +1,65 @@
 buildscript {
-    ext {
-        springBootVersion = '2.1.1.RELEASE'
-    }
     repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        jcenter()
     }
 }
 
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
+plugins {
+    id "com.jfrog.bintray" version "1.7"
+}
+
+apply plugin: 'java-library'
 
 group = 'com.sayokama'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.2'
 sourceCompatibility = 1.8
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply plugin: 'java'
+}
 
 repositories {
     mavenCentral()
+    jcenter()
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            groupId "${group}"
+            artifactId "${rootProject.name}"
+            version "${version}"
+        }
+    }
+}
+
+ext {
+    springBootVersion = '2.0.0.RELEASE'
 }
 
 
 dependencies {
-    compile('org.springframework.boot:spring-boot-starter')
+    compile("org.springframework.boot:spring-boot-starter:${springBootVersion}")
     compile('org.modelmapper:modelmapper:2.3.0')
-    testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+}
+
+bintray {
+    key = project.hasProperty('bintray.apikey') ? project.property('bintray.apikey') : System.getenv('BINTRAY_API_KEY')
+    user = project.hasProperty('bintray.user') ? project.property('bintray.user') : System.getenv('BINTRAY_USER')
+    publications = ['MyPublication']
+    pkg {
+        repo = 'spring'
+        name = "${group}"
+        userOrg = user
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/sayokama/model-mapper-spring-boot-support'
+        labels = ['modelMapper', 'Spring']
+    }
 }
